@@ -61,9 +61,6 @@ plt.show()
 
 
 # --- GRÁFICO 2 MELHORADO COM SEUS DADOS ---
-
-import matplotlib.pyplot as plt
-
 # 1. Filtrar dados válidos (remover faixas com valor zero)
 dados_filtrados = df[(df['Grupo_idade'] != 'Total') & (df['Total_geral'] > 0)]
 faixas = dados_filtrados['Grupo_idade']
