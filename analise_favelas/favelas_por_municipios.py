@@ -78,3 +78,4 @@ print(f"Mediana de favelas por município: {df['Quantidade'].median()}")
 print("\nTop 5 municípios por estado (com mais favelas):")
 top_by_state = df.sort_values(['Estado', 'Quantidade'], ascending=[True, False]).groupby('Estado').head(5)
 print(top_by_state.groupby('Estado').apply(lambda x: x[['Município', 'Quantidade']].to_string(index=False)))
+
