@@ -1,57 +1,80 @@
 import pandas as pd
 import matplotlib.pyplot as plt
+import seaborn as sns
 
-# Configuração do estilo dos gráficos
+# Configuração de estilo
 plt.style.use('ggplot')
 plt.rcParams['figure.figsize'] = (12, 6)
 plt.rcParams['font.size'] = 12
 
 # Carregar os dados
-caminho_completo = r"C:\Users\Cecília Barbosa\Documents\000000_dados\ciencia-dados-\analise_favelas\favela_brasil.csv"
-df = pd.read_csv(caminho_completo, sep=';', encoding='utf-8', skiprows=2)
+# Pulando as primeiras 5 linhas que contêm metadados e cabeçalhos
+df = pd.read_csv(r'C:\Users\Cecília Barbosa\Documents\000000_dados\ciencia-dados-\meta_dados\favela_brasil.csv', sep=';', skiprows=5, encoding='utf-8', 
+                 names=['Município', 'Quantidade'], header=None)
 
-# Limpar e processar os dados
-# Remover a linha do total Brasil
-df = df[~df['Brasil e Município'].str.contains('Brasil', na=False)]
+# Limpeza dos dados
+# Remover linhas com valores nulos ou inválidos
+df = df.dropna()
+df = df[~df['Quantidade'].astype(str).str.contains('[a-zA-Z]')]  # Remove linhas com texto na coluna de quantidade
 
-# Extrair estado da coluna de município
-df[['Município', 'Estado']] = df['Brasil e Município'].str.extract(r'(.+)\s\(([A-Z]{2})\)')
+# Converter quantidade para numérico
+df['Quantidade'] = pd.to_numeric(df['Quantidade'], errors='coerce')
+df = df.dropna(subset=['Quantidade'])
 
-# Converter a coluna de valores para numérico
-df['2022'] = pd.to_numeric(df['2022'], errors='coerce')
+# Extrair estado do nome do município (está entre parênteses)
+df['Estado'] = df['Município'].str.extract(r'\((.*?)\)')
+df['Município'] = df['Município'].str.replace(r'\(.*?\)', '', regex=True).str.strip()
 
-# Agrupar por estado e somar o número de favelas
-estados_df = df.groupby('Estado')['2022'].sum().reset_index()
-estados_df = estados_df.sort_values('2022', ascending=False).head(10)
+# Ordenar por quantidade de favelas
+df_sorted = df.sort_values('Quantidade', ascending=False)
 
-# Pegar os 10 municípios com mais favelas
-municipios_df = df.sort_values('2022', ascending=False).head(10)
+# Top 20 municípios com mais favelas
+top_20 = df_sorted.head(20)
 
-# Criar os gráficos
-fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(20, 8))
+# Gráfico 1: Top 20 municípios com mais favelas
+plt.figure(figsize=(14, 8))
+barplot = sns.barplot(data=top_20, x='Quantidade', y='Município', hue='Estado', dodge=False, palette='viridis')
+plt.title('Top 20 Municípios com Mais Favelas no Brasil (2022)')
+plt.xlabel('Número de Favelas')
+plt.ylabel('Município')
+plt.grid(axis='x')
 
-# Gráfico dos estados
-ax1.barh(estados_df['Estado'], estados_df['2022'], color='skyblue')
-ax1.set_title('Top 10 Estados com Mais Favelas (2022)')
-ax1.set_xlabel('Número de Favelas')
-ax1.set_ylabel('Estado')
-for i, v in enumerate(estados_df['2022']):
-    ax1.text(v + 3, i, str(v), color='black', va='center')
-
-# Gráfico dos municípios
-ax2.barh(municipios_df['Município'], municipios_df['2022'], color='salmon')
-ax2.set_title('Top 10 Municípios com Mais Favelas (2022)')
-ax2.set_xlabel('Número de Favelas')
-ax2.set_ylabel('Município')
-for i, v in enumerate(municipios_df['2022']):
-    ax2.text(v + 3, i, str(v), color='black', va='center')
+# Adicionar os valores nas barras
+for p in barplot.patches:
+    width = p.get_width()
+    plt.text(width + 5, p.get_y() + p.get_height()/2, f'{int(width)}', ha='left', va='center')
 
 plt.tight_layout()
 plt.show()
 
-# Mostrar os dados em forma de tabela também
-print("\nTop 10 Estados com mais favelas:")
-print(estados_df.to_string(index=False))
+# Gráfico 2: Distribuição por estado (top 10)
+estados = df.groupby('Estado')['Quantidade'].sum().sort_values(ascending=False).head(10)
 
-print("\nTop 10 Municípios com mais favelas:")
-print(municipios_df[['Município', 'Estado', '2022']].to_string(index=False))
+plt.figure(figsize=(14, 6))
+estados.plot(kind='bar', color='teal')
+plt.title('Top 10 Estados com Mais Favelas (Soma por Estado)')
+plt.xlabel('Estado')
+plt.ylabel('Total de Favelas')
+plt.xticks(rotation=45)
+plt.grid(axis='y')
+
+# Adicionar os valores nas barras
+for i, v in enumerate(estados):
+    plt.text(i, v + 50, str(int(v)), ha='center', va='bottom')
+
+plt.tight_layout()
+plt.show()
+
+
+# Estatísticas descritivas
+print("\nEstatísticas Descritivas:\n")
+print(f"Total de favelas no Brasil: {df['Quantidade'].sum():,}")
+print(f"Número total de municípios com favelas: {len(df)}")
+print(f"Média de favelas por município: {df['Quantidade'].mean():.1f}")
+print(f"Município com mais favelas: {df_sorted.iloc[0]['Município']} ({df_sorted.iloc[0]['Estado']}) com {df_sorted.iloc[0]['Quantidade']} favelas")
+print(f"Mediana de favelas por município: {df['Quantidade'].median()}")
+
+# Top 5 municípios por estado
+print("\nTop 5 municípios por estado (com mais favelas):")
+top_by_state = df.sort_values(['Estado', 'Quantidade'], ascending=[True, False]).groupby('Estado').head(5)
+print(top_by_state.groupby('Estado').apply(lambda x: x[['Município', 'Quantidade']].to_string(index=False)))

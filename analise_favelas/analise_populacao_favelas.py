@@ -1,5 +1,6 @@
 import pandas as pd
 import matplotlib.pyplot as plt
+import numpy as np
 
 # Caminho do seu arquivo CSV
 caminho_csv = '../meta_dados/favela.csv'
@@ -59,23 +60,38 @@ plt.show()
 
 
 
-#--- ------- Gráfico 2: Cor/Raça por Faixa Etária ----------
-# Agrupa dados por faixa etária e soma por raça
-faixas = df[df['Grupo_idade'] != 'Total']['Grupo_idade']
-parda_por_idade = df[df['Grupo_idade'] != 'Total'][['Grupo_idade', 'Parda_total']]
-preta_por_idade = df[df['Grupo_idade'] != 'Total'][['Grupo_idade', 'Preta_total']]
-branca_por_idade = df[df['Grupo_idade'] != 'Total'][['Grupo_idade', 'Branca_total']]
+# --- GRÁFICO 2 MELHORADO COM SEUS DADOS ---
 
-plt.figure(figsize=(12, 6))
-plt.plot(faixas, parda_por_idade['Parda_total'], marker='o', label='Parda')
-plt.plot(faixas, preta_por_idade['Preta_total'], marker='o', label='Preta')
-plt.plot(faixas, branca_por_idade['Branca_total'], marker='o', label='Branca')
-plt.title('Distribuição por idade das principais cores/raças em favelas')
-plt.xlabel('Grupo de Idade')
-plt.ylabel('População')
-plt.xticks(rotation=45)
-plt.legend()
-plt.grid(True)
+import matplotlib.pyplot as plt
+
+# 1. Filtrar e preparar os dados
+faixas = df[df['Grupo_idade'] != 'Total']['Grupo_idade']
+total_populacao = df[df['Grupo_idade'] != 'Total']['Total_geral'].fillna(0)
+
+# 2. Configurar o gráfico
+plt.figure(figsize=(10, 6))
+bars = plt.bar(faixas, total_populacao, color='#1f77b4', width=0.7, alpha=0.8)
+
+# 3. Adicionar rótulos de valor
+for bar in bars:
+    height = bar.get_height()
+    plt.text(bar.get_x() + bar.get_width()/2., height,
+             f'{int(height):,}'.replace(',', '.'),  # Formato 1.000.000
+             ha='center', va='bottom')
+
+# 4. Customização limpa
+plt.title('População em Favelas por Faixa Etária', pad=20, fontweight='bold')
+plt.xlabel('Faixa Etária')
+plt.ylabel('População Total')
+plt.xticks(rotation=45 if len(faixas) > 3 else 0)
+plt.grid(axis='y', linestyle=':', alpha=0.4)
+
+# 5. Remover elementos desnecessários
+ax = plt.gca()
+ax.spines[['top', 'right']].set_visible(False)
 plt.tight_layout()
 plt.show()
 
+
+#grafico 03 é de municipios com mais favelas 
+#grafico 04 é de estados com mais favelas 
