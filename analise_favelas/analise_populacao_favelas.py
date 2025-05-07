@@ -64,34 +64,45 @@ plt.show()
 
 import matplotlib.pyplot as plt
 
-# 1. Filtrar e preparar os dados
-faixas = df[df['Grupo_idade'] != 'Total']['Grupo_idade']
-total_populacao = df[df['Grupo_idade'] != 'Total']['Total_geral'].fillna(0)
+# 1. Filtrar dados válidos (remover faixas com valor zero)
+dados_filtrados = df[(df['Grupo_idade'] != 'Total') & (df['Total_geral'] > 0)]
+faixas = dados_filtrados['Grupo_idade']
+valores = dados_filtrados['Total_geral']
 
-# 2. Configurar o gráfico
-plt.figure(figsize=(10, 6))
-bars = plt.bar(faixas, total_populacao, color='#1f77b4', width=0.7, alpha=0.8)
+# 2. Configuração do gráfico ultra-limp
+fig, ax = plt.subplots(figsize=(10, 5))  # Mais compacto
 
-# 3. Adicionar rótulos de valor
+# 3. Barras com estilo minimalista
+bars = ax.bar(faixas, valores, 
+             color='#2c7bb6', 
+             width=0.6,
+             edgecolor='white',
+             linewidth=0.5)
+
+# 4. Adicionar valores formatados
 for bar in bars:
     height = bar.get_height()
-    plt.text(bar.get_x() + bar.get_width()/2., height,
-             f'{int(height):,}'.replace(',', '.'),  # Formato 1.000.000
-             ha='center', va='bottom')
+    ax.text(bar.get_x() + bar.get_width()/2, height * 1.02,
+           f'{int(height):,}'.replace(',', '.'),
+           ha='center', va='bottom',
+           fontsize=9)
 
-# 4. Customização limpa
-plt.title('População em Favelas por Faixa Etária', pad=20, fontweight='bold')
-plt.xlabel('Faixa Etária')
-plt.ylabel('População Total')
-plt.xticks(rotation=45 if len(faixas) > 3 else 0)
-plt.grid(axis='y', linestyle=':', alpha=0.4)
+# 5. Customização profissional
+ax.set_title('Distribuição por Faixa Etária - População em Favelas', 
+            pad=15, fontsize=12, fontweight='bold')
+ax.set_xlabel('Faixa Etária', labelpad=8)
+ax.set_ylabel('População Total', labelpad=8)
+ax.set_xticks(range(len(faixas)))
+ax.set_xticklabels(faixas, rotation=45 if len(faixas) > 3 else 0)
 
-# 5. Remover elementos desnecessários
-ax = plt.gca()
-ax.spines[['top', 'right']].set_visible(False)
-plt.tight_layout()
+# 6. Limpeza radical
+ax.spines[['right', 'top', 'left']].set_visible(False)  # Remove todas as bordas
+ax.yaxis.grid(True, linestyle=':', alpha=0.3)  # Grade horizontal muito sutil
+ax.tick_params(axis='both', which='both', length=0)  # Remove marcadores
+
+# 7. Ajuste preciso do layout
+plt.tight_layout(pad=1.5)
 plt.show()
-
 
 #grafico 03 é de municipios com mais favelas 
 #grafico 04 é de estados com mais favelas 
