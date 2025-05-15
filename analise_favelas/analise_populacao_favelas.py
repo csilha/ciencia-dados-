@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 # Caminho do seu arquivo CSV
-caminho_csv = '../meta_dados/favela.csv'
+caminho_csv = "C:/Users/Cecília Barbosa/Documents/000000_dados/ciencia-dados-/meta_dados/favela_idade_raca_sexo.csv"
 
 # Lê o arquivo pulando cabeçalhos e usando o separador correto
 df = pd.read_csv(caminho_csv, sep=';', skiprows=5, engine='python', header=None, on_bad_lines='skip')
@@ -60,7 +60,7 @@ plt.show()
 
 
 
-# --- GRÁFICO 2 MELHORADO COM SEUS DADOS ---
+# --- GRÁFICO 2 MELHORADO COM SEUS DADOS ----
 # 1. Filtrar dados válidos (remover faixas com valor zero)
 dados_filtrados = df[(df['Grupo_idade'] != 'Total') & (df['Total_geral'] > 0)]
 faixas = dados_filtrados['Grupo_idade']
@@ -76,13 +76,6 @@ bars = ax.bar(faixas, valores,
              edgecolor='white',
              linewidth=0.5)
 
-# 4. Adicionar valores formatados
-for bar in bars:
-    height = bar.get_height()
-    ax.text(bar.get_x() + bar.get_width()/2, height * 1.02,
-           f'{int(height):,}'.replace(',', '.'),
-           ha='center', va='bottom',
-           fontsize=9)
 
 # 5. Customização profissional
 ax.set_title('Distribuição por Faixa Etária - População em Favelas', 
@@ -101,5 +94,4 @@ ax.tick_params(axis='both', which='both', length=0)  # Remove marcadores
 plt.tight_layout(pad=1.5)
 plt.show()
 
-#grafico 03 é de municipios com mais favelas 
-#grafico 04 é de estados com mais favelas 
+
