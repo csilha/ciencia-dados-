@@ -6,7 +6,6 @@ from geopy.geocoders import Nominatim
 from geopy.extra.rate_limiter import RateLimiter
 import branca.colormap as cm
 import json
-import folium
 from folium.features import GeoJsonTooltip
 
 # ---------- CONFIGURAÇÕES DE ESTILO ----------
@@ -68,17 +67,13 @@ plt.tight_layout()
 plt.show()
 
 # ---------- ESTATÍSTICAS ----------
-print("\n📊 Estatísticas Descritivas:\n")
+print("\n📊 Estatísticas Descritivas 2022:\n")
 print(f"Total de favelas no Brasil: {int(df['Quantidade'].sum()):,}")
 print(f"Número total de municípios com favelas: {len(df)}")
 print(f"Média de favelas por município: {df['Quantidade'].mean():.1f}")
 print(f"Mediana de favelas por município: {df['Quantidade'].median():.1f}")
 print(f"Município com mais favelas: {df_sorted.iloc[0]['Município']} ({df_sorted.iloc[0]['Estado']}) com {int(df_sorted.iloc[0]['Quantidade'])} favelas")
 
-# ---------- TOP 5 MUNICÍPIOS POR ESTADO ----------
-print("\n🏙️ Top 5 municípios por estado com mais favelas:")
-top_by_state = df.sort_values(['Estado', 'Quantidade'], ascending=[True, False]).groupby('Estado').head(5)
-print(top_by_state.groupby('Estado').apply(lambda x: x[['Município', 'Quantidade']].to_string(index=False)))
 
 # ---------- MAPA INTERATIVO ----------
 geolocator = Nominatim(user_agent="mapa_favelas")

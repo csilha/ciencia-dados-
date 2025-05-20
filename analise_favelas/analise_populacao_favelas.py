@@ -1,6 +1,5 @@
 import pandas as pd
 import matplotlib.pyplot as plt
-import numpy as np
 
 # Caminho do seu arquivo CSV
 caminho_csv = "C:/Users/Cecília Barbosa/Documents/000000_dados/ciencia-dados-/meta_dados/favela_idade_raca_sexo.csv"

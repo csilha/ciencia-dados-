@@ -78,6 +78,7 @@ plt.xlabel("Moradores de favela por 10 mil habitantes")
 plt.ylabel("Estado")
 plt.title("Proporção de moradores de favelas a cada 10 mil habitantes por estado")
 plt.grid(True, axis="x")
+plt.xlim(0, 4000)  # Limite no eixo X até 4 mil
 plt.tight_layout()
 plt.show()
 
@@ -98,12 +99,96 @@ plt.xlabel('Número de pessoas vivendo em favelas')
 plt.ylabel('Estado')
 plt.title('Top 10 estados com maior número absoluto de pessoas vivendo em favelas')
 plt.grid(True, axis='x')
+plt.xlim(0, 4000000)  # Limite no eixo X até 4 milhões
+plt.tight_layout()
+plt.show()
+
+# -------------------------------
+# Gráfico de barras empilhadas com porcentagem sobre favelas
+# -------------------------------
+
+# Ordenar os dados por população total
+df_empilhado = df.sort_values(by="Populacao_Total")
+
+# Calcular população fora de favelas
+df_empilhado["Populacao_Formal"] = df_empilhado["Populacao_Total"] - df_empilhado["Populacao_Favela"]
+
+# Calcular a porcentagem de favelas
+df_empilhado["Percentual_Favela"] = (df_empilhado["Populacao_Favela"] / df_empilhado["Populacao_Total"]) * 100
+
+# Criar gráfico
+plt.figure(figsize=(14, 8))
+plt.bar(df_empilhado["Estado"], df_empilhado["Populacao_Formal"], label="Área urbanizada formal", color="lightgray")
+bars_favela = plt.bar(
+    df_empilhado["Estado"],
+    df_empilhado["Populacao_Favela"],
+    bottom=df_empilhado["Populacao_Formal"],
+    label="Favelas",
+    color="red"
+)
+
+# Adicionar porcentagem no topo da parte vermelha (favelas)
+for i, bar in enumerate(bars_favela):
+    height = bar.get_height()
+    bottom = bar.get_y()
+    total = height + bottom
+    percentual = df_empilhado.iloc[i]["Percentual_Favela"]
+    plt.text(
+        bar.get_x() + bar.get_width() / 2,
+        total + df_empilhado["Populacao_Total"].max() * 0.005,  # deslocamento vertical
+        f"{percentual:.1f}%",
+        ha='center',
+        va='bottom',
+        fontsize=8,
+        color="black"
+    )
+
+plt.ylabel("População")
+plt.xlabel("Estado")
+plt.title("População total por estado com destaque e porcentagem de moradores em favelas")
+plt.xticks(rotation=90)
+plt.legend()
+plt.tight_layout()
+plt.show()
+
+# ----------------------------
+# NOVO GRÁFICO DE DISPERSÃO
+# ----------------------------
+
+# (re)calcular a coluna Percentual_Favela se ainda não existir
+if "Percentual_Favela" not in df.columns:
+    df["Percentual_Favela"] = (df["Populacao_Favela"] / df["Populacao_Total"]) * 100
+
+# Remover os dois estados com menor e maior percentual
+df_dispersao = df.sort_values(by="Percentual_Favela").iloc[2:-2]
+
+# Calcular a média dos percentuais (com dados filtrados)
+media_percentual = df_dispersao["Percentual_Favela"].mean()
+
+# Calcular desvio da média
+df_dispersao["Desvio_da_Media"] = df_dispersao["Percentual_Favela"] - media_percentual
+
+# Criar gráfico de dispersão
+plt.figure(figsize=(12, 6))
+sns.scatterplot(
+    data=df_dispersao,
+    x="Estado",
+    y="Percentual_Favela",
+    hue="Desvio_da_Media",
+    palette="coolwarm",
+    s=100
+)
+plt.axhline(media_percentual, color='gray', linestyle='--', label=f'Média: {media_percentual:.2f}%')
+plt.xticks(rotation=45)
+plt.ylabel("Percentual de população em favelas 2022 (%)")
+plt.title("Dispersão dos percentuais de moradores em favelas por estado\n(desconsiderando os 2 maiores e 2 menores)")
+plt.legend()
+plt.grid(True, axis='y')
 plt.tight_layout()
 plt.show()
 
 
 # ---- mapa ------------
-import pandas as pd
 import folium
 import json
 import requests

@@ -129,5 +129,5 @@ colormap.add_to(mapa)
 
 # ------------------ 5. SALVAR E FINALIZAR ------------------
 
-mapa.save("mapa_estados_favelas_gradiente_vermelho.html")
-print("🗺️ Mapa com gradiente vermelho salvo como 'mapa_estados_favelas_gradiente_vermelho.html'")
+mapa.save("mapa_qtd_favelas_gradiente_vermelho.html")
+print("🗺️ Mapa com gradiente vermelho salvo como 'mapa_qtd_favelas_gradiente_vermelho.html'")
