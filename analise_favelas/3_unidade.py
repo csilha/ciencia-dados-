@@ -1,5 +1,4 @@
-# Análise do crescimento da população em favelas e sua relação com a raça
-
+#-------- 2 escolaridade -------------
 import pandas as pd
 import unicodedata
 import matplotlib.pyplot as plt
@@ -7,102 +6,7 @@ import seaborn as sns
 import scipy.stats as stats
 import statsmodels.api as sm
 import numpy as np
-from scipy.stats import pearsonr
-
-
-# -------------------------
-# Etapa 1: Carregar dados populacionais de favelas (2010 e 2022)
-# -------------------------
-pop_favela_2010 = pd.read_csv("C:\\Users\\Cecília Barbosa\\Documents\\000000_dados\\ciencia-dados-\\meta_dados\\pop_favela_uf_2010.csv", sep=";", skiprows=5, names=["UF", "Populacao_Favela_2010"])
-pop_favela_2010["UF"] = pop_favela_2010["UF"].str.replace('"', '').str.strip()
-pop_favela_2010 = pop_favela_2010[pop_favela_2010["UF"] != "Brasil"]
-# Limpar caracteres não numéricos e remover vazios antes de converter
-pop_favela_2010["Populacao_Favela_2010"] = (
-    pop_favela_2010["Populacao_Favela_2010"]
-    .astype(str)
-    .str.replace(r"[^\d]", "", regex=True)
-)
-
-# Remover linhas onde a coluna está vazia depois da limpeza
-pop_favela_2010 = pop_favela_2010[pop_favela_2010["Populacao_Favela_2010"] != ""]
-
-# Converter para inteiro com segurança
-pop_favela_2010["Populacao_Favela_2010"] = pop_favela_2010["Populacao_Favela_2010"].astype(int)
-
-
-pop_favela_2022 = pd.read_csv(r"C:\Users\Cecília Barbosa\Documents\000000_dados\ciencia-dados-\meta_dados\favela_popu_por_uf.csv", sep=";", skiprows=6, names=["UF", "Grupo_Idade", "Populacao_Favela_2022"])
-pop_favela_2022 = pop_favela_2022[pop_favela_2022["Grupo_Idade"] == "Total"]
-pop_favela_2022["UF"] = pop_favela_2022["UF"].str.strip()
-pop_favela_2022["Populacao_Favela_2022"] = pop_favela_2022["Populacao_Favela_2022"].astype(str).str.replace(r"[^\d]", "", regex=True).astype(int)
-
-# Padronizar UFs
-padronizar = lambda s: s.str.upper().apply(lambda x: unicodedata.normalize("NFKD", x).encode("ASCII", "ignore").decode("utf-8").strip())
-pop_favela_2010["UF"] = padronizar(pop_favela_2010["UF"])
-pop_favela_2022["UF"] = padronizar(pop_favela_2022["UF"])
-
-# Merge e cálculo do crescimento
-df = pd.merge(pop_favela_2010, pop_favela_2022[["UF", "Populacao_Favela_2022"]], on="UF", how="inner")
-df["Crescimento_Pop_Favela_%"] = ((df["Populacao_Favela_2022"] - df["Populacao_Favela_2010"]) / df["Populacao_Favela_2010"]) * 100
-
-# -------------------------
-# Etapa 2: Carregar dados de raça por UF (IBGE)
-# -------------------------
-df_raca_raw = pd.read_excel(r"C:\Users\Cecília Barbosa\Documents\000000_dados\ciencia-dados-\meta_dados\brasil_populacao_por_uf.xlsx", skiprows=5)
-
-df_raca = df_raca_raw.rename(columns={
-    "Unnamed: 0": "UF",
-    "Total": "Pop_Total",
-    "Unnamed: 5": "Preta",
-    "Unnamed: 7": "Parda"
-})
-df_raca = df_raca[["UF", "Pop_Total", "Preta", "Parda"]].dropna()
-df_raca = df_raca[~df_raca["UF"].str.contains("BRASIL", case=False)]
-
-for col in ["Pop_Total", "Preta", "Parda"]:
-    df_raca[col] = df_raca[col].astype(str).str.replace(r"[^\d]", "", regex=True).astype(float)
-
-df_raca["Perc_Preto_Pardo"] = ((df_raca["Preta"] + df_raca["Parda"]) / df_raca["Pop_Total"]) * 100
-df_raca["UF"] = padronizar(df_raca["UF"])
-
-# -------------------------
-# Etapa 3: Unir as bases e realizar análise estatística
-# -------------------------
-df_final = pd.merge(df, df_raca[["UF", "Perc_Preto_Pardo"]], on="UF", how="left")
-df_clean = df_final.dropna(subset=["Crescimento_Pop_Favela_%", "Perc_Preto_Pardo"])
-
-# Correlação de Pearson
-r, p_corr = stats.pearsonr(df_clean["Crescimento_Pop_Favela_%"], df_clean["Perc_Preto_Pardo"])
-
-# Teste t de grupos
-mediana_pp = df_clean["Perc_Preto_Pardo"].median()
-grupo_alto = df_clean[df_clean["Perc_Preto_Pardo"] >= mediana_pp]["Crescimento_Pop_Favela_%"]
-grupo_baixo = df_clean[df_clean["Perc_Preto_Pardo"] < mediana_pp]["Crescimento_Pop_Favela_%"]
-t_stat, p_tteste = stats.ttest_ind(grupo_alto, grupo_baixo, equal_var=False)
-
-# Regressão Linear Simples
-X = sm.add_constant(df_clean["Perc_Preto_Pardo"])
-y = df_clean["Crescimento_Pop_Favela_%"]
-modelo = sm.OLS(y, X).fit()
-
-# Gráfico
-plt.figure(figsize=(10, 6))
-sns.regplot(x="Perc_Preto_Pardo", y="Crescimento_Pop_Favela_%", data=df_clean)
-plt.title("Regressão Linear: Crescimento de Favelas vs. % Pretos/Pardos")
-plt.xlabel("% Pretos ou Pardos (2022)")
-plt.ylabel("Crescimento da População em Favelas (2010–2022)")
-plt.grid(True)
-plt.tight_layout()
-plt.show()
-
-# Resumo dos resultados
-print("Correlação de Pearson:", round(r, 4), "(p =", round(p_corr, 4), ")")
-print("P-valor do teste t entre grupos (alto vs. baixo % pretos/pardos):", round(p_tteste, 4))
-print("\nResumo da Regressão Linear:\n")
-print(modelo.summary())
-
-
-#-------- 2 escolaridade -------------
-
+from scipy.stats import pearsonr 
 
 def normalizar_estado(estado):
     return unicodedata.normalize('NFKD', estado.strip()).encode('ASCII', 'ignore').decode('utf-8').upper()
@@ -219,3 +123,16 @@ plt.xlabel('População com Baixa Escolaridade')
 plt.ylabel('População em Favelas')
 plt.tight_layout()
 plt.show()
+
+# --- 2.2 Regressão Linear: Baixa Escolaridade vs. População em Favelas ---
+
+# Preparar as variáveis para o modelo
+X = sm.add_constant(df_merge['baixa'])  # Variável independente com constante
+y = df_merge['pop_favela']              # Variável dependente
+
+# Ajustar o modelo OLS
+modelo = sm.OLS(y, X).fit()
+
+# Imprimir resumo completo da regressão
+print("\nResumo da Regressão Linear entre baixa escolaridade e população em favelas:\n")
+print(modelo.summary())
