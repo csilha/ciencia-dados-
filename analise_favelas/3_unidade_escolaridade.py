@@ -60,7 +60,7 @@ plt.tight_layout()
 plt.grid(axis='y')
 plt.show()
 
-#------ 2.1 correlação pop_favela e baixa escolaridade 
+#------ 2.1 correlação pop_favela e baixa escolaridade total
 
 # Função para normalizar nomes de estados
 def normalizar_estado(estado):
@@ -69,7 +69,8 @@ def normalizar_estado(estado):
         return estado.lower()
     return estado
 
-# Carregar dados
+# Carregar dados para correlação população 25 a 65 anos 
+
 escolaridade_df = pd.read_excel(r"C:\Users\Cecília Barbosa\Documents\000000_dados\ciencia-dados-\meta_dados\escolaridade_br_22_idade.xlsx")
 favelas_df = pd.read_csv(r"C:\Users\Cecília Barbosa\Documents\000000_dados\ciencia-dados-\meta_dados\favela_popu_por_uf.csv")
 
@@ -116,7 +117,7 @@ sns.regplot(
 )
 
 # Título com correlação
-plt.title(f'Correlação Entre Baixa Escolaridade E População Em Favelas\n'
+plt.title(f'Correlação Entre Baixa Escolaridade E População Em Favelas na população entre 25 a 65 anos\n'
           f'Coef. de correlação: {correlacao:.2f}, p-valor: {p_valor:.4f}',
           fontsize=12)
 plt.xlabel('População com Baixa Escolaridade')
@@ -136,3 +137,71 @@ modelo = sm.OLS(y, X).fit()
 # Imprimir resumo completo da regressão
 print("\nResumo da Regressão Linear entre baixa escolaridade e população em favelas:\n")
 print(modelo.summary())
+
+
+#----- 2.3 correlação população de escolaridade total 
+
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+from scipy.stats import pearsonr
+import unicodedata
+import numpy as np
+
+# Função para normalizar nome de estados
+def normalizar_estado(estado):
+    if isinstance(estado, str):
+        estado = unicodedata.normalize('NFKD', estado).encode('ASCII', 'ignore').decode('utf-8').strip()
+        return estado.lower()
+    return estado
+
+# Carregar o DataFrame de escolaridade com nomes corretos
+file_path = r"C:\Users\Cecília Barbosa\Documents\000000_dados\ciencia-dados-\meta_dados\escolaridade_br_22_total.xlsx"
+df_escolaridade = pd.read_excel(file_path)
+
+# Renomear colunas
+df_escolaridade.columns = ['estado', 'baixa', 'media', 'alta']
+
+# Normalizar nome do estado
+df_escolaridade['estado'] = df_escolaridade['estado'].apply(normalizar_estado)
+
+# Carregar DataFrame de favelas
+favelas_df = pd.read_csv(r"C:\Users\Cecília Barbosa\Documents\000000_dados\ciencia-dados-\meta_dados\favela_popu_por_uf.csv")
+
+# Ajustar e normalizar favelas_df
+favelas_df.rename(columns={favelas_df.columns[0]: 'estado'}, inplace=True)
+favelas_df = favelas_df[favelas_df['estado'].str.contains(';Total;', na=False)].copy()
+favelas_df[['estado_nome', 'tag', 'pop_favela']] = favelas_df['estado'].str.split(';', expand=True)
+favelas_df['estado'] = favelas_df['estado_nome'].apply(normalizar_estado)
+favelas_df['pop_favela'] = pd.to_numeric(favelas_df['pop_favela'], errors='coerce')
+
+# Merge com base no estado
+df_merged = pd.merge(df_escolaridade, favelas_df[['estado', 'pop_favela']], on='estado', how='inner')
+
+# Exibir estados que deram match
+print(f"\n🔗 Merge realizado com {df_merged.shape[0]} estados.")
+
+# Lista de faixas para comparar
+faixas = ['baixa', 'media', 'alta']
+
+# Criar gráfico de correlação para cada faixa de escolaridade
+for faixa in faixas:
+    x = df_merged[faixa]
+    y = df_merged['pop_favela']
+    coef, pval = pearsonr(x, y)
+
+    plt.figure(figsize=(8, 5))
+    sns.regplot(x=x, y=y, color='blue', line_kws={'color': 'red'})
+    plt.title(f'Correlação: {faixa.capitalize()} Escolaridade vs. População em Favelas\n'
+              f'Coef. de correlação = {coef:.2f}, p-valor = {pval:.4f}')
+    plt.xlabel(f'População com Escolaridade {faixa}')
+    plt.ylabel('População em Favelas')
+    plt.tight_layout()
+    plt.grid(True)
+    plt.show()
+
+    print(f"\n📊 Correlação entre {faixa} escolaridade e população em favelas:")
+    print(f"   → Coef. de correlação: {coef:.2f}")
+    print(f"   → P-valor: {pval:.4f}")
+
+
