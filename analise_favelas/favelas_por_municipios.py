@@ -8,12 +8,11 @@ import branca.colormap as cm
 import json
 from folium.features import GeoJsonTooltip
 
-# ---------- CONFIGURAÇÕES DE ESTILO ----------
 plt.style.use('ggplot')
 plt.rcParams['figure.figsize'] = (12, 6)
 plt.rcParams['font.size'] = 12
 
-# ---------- CARREGAR DADOS ----------
+
 df = pd.read_csv(
     r'C:/Users/Cecília Barbosa/Documents/000000_dados/ciencia-dados-/meta_dados/favela_quantitativo_por_munici.csv',
     sep=';', skiprows=5, encoding='utf-8', names=['Município', 'Quantidade'], header=None

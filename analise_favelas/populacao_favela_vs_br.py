@@ -10,7 +10,6 @@ if platform.system() == "Windows":
 else:
     locale.setlocale(locale.LC_ALL, 'pt_BR.UTF-8')
 
-# Caminhos dos arquivos
 xlsx_path = "C:/Users/Cecília Barbosa/Documents/000000_dados/ciencia-dados-/meta_dados/brasil_populacao_por_uf.xlsx"
 csv_path = "C:/Users/Cecília Barbosa/Documents/000000_dados/ciencia-dados-/meta_dados/favela_popu_por_uf.csv"
 
@@ -35,23 +34,17 @@ def limpar_com_locale(valores):
             resultados.append(0)
     return resultados
 
-# ----------------------------
-# Ler dados do Excel
-# ----------------------------
+
 df_excel = pd.read_excel(xlsx_path, header=None, engine="openpyxl")
 pop_total_raw = df_excel.iloc[10:37, 2]  # População total (coluna C, linhas 11 a 37)
 pop_total = limpar_com_locale(pop_total_raw)
 
-# ----------------------------
-# Ler dados do CSV
-# ----------------------------
+
 df_csv = pd.read_csv(csv_path, sep=";", header=None, encoding="utf-8")
 pop_favela_raw = df_csv.iloc[7:34, 2]  # População favela (coluna C, linhas 8 a 34)
 pop_favela = limpar_com_locale(pop_favela_raw)
 
-# ----------------------------
-# Montar DataFrame final
-# ----------------------------
+
 df = pd.DataFrame({
     "Estado": estados,
     "Populacao_Total": pop_total,
@@ -69,9 +62,7 @@ if not erros.empty:
 df["Proporcao_por_10mil"] = (df["Populacao_Favela"] / df["Populacao_Total"]) * 10000
 df = df.sort_values(by="Proporcao_por_10mil", ascending=False)
 
-# ----------------------------
-# Exibir gráfico
-# ----------------------------
+#------- Gráfico 01
 plt.figure(figsize=(12, 8))
 sns.barplot(data=df, x="Proporcao_por_10mil", y="Estado")
 plt.xlabel("Moradores de favela por 10 mil habitantes")
@@ -82,17 +73,15 @@ plt.xlim(0, 4000)  # Limite no eixo X até 4 mil
 plt.tight_layout()
 plt.show()
 
-# -------------------------------
 # Top 10 estados com maior número absoluto de moradores em favelas
-# -------------------------------
+
 top10_absoluto = df.sort_values(by="Populacao_Favela", ascending=False).head(10)
 
 print("\n🧭 Top 10 estados com mais pessoas vivendo em favelas (número absoluto):")
 print(top10_absoluto[["Estado", "Populacao_Favela"]].to_string(index=False))
 
-# -------------------------------
 # Gráfico dos 10 estados com mais pessoas em favelas (absoluto)
-# -------------------------------
+
 plt.figure(figsize=(12, 6))
 sns.barplot(data=top10_absoluto, x='Populacao_Favela', y='Estado')
 plt.xlabel('Número de pessoas vivendo em favelas')
@@ -103,9 +92,7 @@ plt.xlim(0, 4000000)  # Limite no eixo X até 4 milhões
 plt.tight_layout()
 plt.show()
 
-# -------------------------------
 # Gráfico de barras empilhadas com porcentagem sobre favelas
-# -------------------------------
 
 # Ordenar os dados por população total
 df_empilhado = df.sort_values(by="Populacao_Total")
@@ -127,7 +114,6 @@ bars_favela = plt.bar(
     color="red"
 )
 
-# Adicionar porcentagem no topo da parte vermelha (favelas)
 for i, bar in enumerate(bars_favela):
     height = bar.get_height()
     bottom = bar.get_y()
@@ -151,11 +137,8 @@ plt.legend()
 plt.tight_layout()
 plt.show()
 
-# ----------------------------
-# NOVO GRÁFICO DE DISPERSÃO
-# ----------------------------
+# GRÁFICO DE DISPERSÃO
 
-# (re)calcular a coluna Percentual_Favela se ainda não existir
 if "Percentual_Favela" not in df.columns:
     df["Percentual_Favela"] = (df["Populacao_Favela"] / df["Populacao_Total"]) * 100
 

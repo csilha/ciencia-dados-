@@ -7,12 +7,8 @@ import requests
 import json
 import os
 
-# ------------------ 1. LER E LIMPAR DADOS ------------------
-
-# Caminho do seu CSV
 csv_path = r'C:/Users/Cecília Barbosa/Documents/000000_dados/ciencia-dados-/meta_dados/favela_quantitativo_por_munici.csv'
 
-# Carregar dados ignorando cabeçalhos extras
 df = pd.read_csv(csv_path, sep=';', skiprows=5, encoding='utf-8', names=['Município', 'Quantidade'], header=None)
 
 # Limpeza
@@ -59,11 +55,9 @@ sigla_para_nome = {
     'TO': 'Tocantins'
 }
 
-# Substituir as siglas pelas formas completas
 df_estados['Estado'] = df_estados['Estado'].map(sigla_para_nome)
 
 
-# Corrigir possíveis nomes que venham sem acento (por segurança)
 df_estados['Estado'] = df_estados['Estado'].replace({
     "Rondonia": "Rondônia",
     "Amapa": "Amapá",
@@ -99,8 +93,6 @@ for feature in geojson_data['features']:
     feature['properties']['favelas'] = float(valor.values[0]) if not valor.empty else 0.0
 
 # ------------------ 4. CRIAR MAPA COM GRADIENTE VERMELHO ------------------
-
-# Criar mapa
 mapa = folium.Map(location=[-14.2, -51.9], zoom_start=4)
 
 # Escala de cores (Reds)
