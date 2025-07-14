@@ -10,8 +10,6 @@ import os
 df = pd.read_csv(r"C:\Users\Cecília Barbosa\Documents\000000_dados\ciencia-dados-\meta_dados\escolaridade_normalizada.csv")
 
 
-
-
 # Carregar o CSV com separador de vírgula e corrigir nome das colunas
 df = pd.read_csv(r"C:\Users\Cecília Barbosa\Documents\000000_dados\ciencia-dados-\meta_dados\escolaridade_normalizada.csv", sep=",", encoding="utf-8")
 df.columns = ["Estado", "Baixa", "Media", "Alta"]
